@@ -162,7 +162,7 @@ def stage3():
     xs = np.linspace(dis.min(), dis.max(), 50)
     ax.plot(xs, np.polyval(b, xs), "-", color="#c62828", lw=2,
             label=f"fit (r = {st['corr']:.2f})")
-    ax.set(title="Uncertainty is calibrated:\nensemble disagreement predicts actual error",
+    ax.set(title="Ensemble disagreement vs prediction error\n(empirical correlation)",
            xlabel="ensemble disagreement [m]",
            ylabel="actual prediction error [m]")
     ax.legend(fontsize=8)
@@ -173,36 +173,73 @@ def stage3():
     plt.close(fig)
 
     # ---- figure: stress benchmark --------------------------------------
-    import numpy as _np
-    order = [("Single-MPC", "Single model\n(1 future)"),
-             ("Neural-MPC", "Ensemble mean\n(5 futures)"),
-             ("Risk-MPC", "Ensemble CVaR\n(risk-aware)")]
+
+    # ---- figure: stress benchmark --------------------------------------
+    order = [
+        ("Neural-MPC", "Ensemble mean\n(5 futures)"),
+        ("Risk-MPC", "Ensemble CVaR\n(risk-aware)"),
+    ]
+
+    if "stress" not in st:
+        raise RuntimeError(
+            "Stage 2 results missing. Run Stage 2 first."
+        )
+
     rows = {}
     for key, label in order:
-        raw = st["stress_raw"][key]
+        if key not in st["stress"]:
+            raise RuntimeError(
+                f"Missing stress results for {key}. Rerun Stage 2."
+            )
+
+        metrics = st["stress"][key]
         rows[label] = {
-            "success_rate": float(_np.mean([d["success"] for d in raw.values()])),
-            "collision_rate": float(_np.mean([d["collision"] for d in raw.values()])),
-            "energy": float(_np.mean([d["energy"] for d in raw.values()])),
-            "episodes": len(raw)}
+            "success_rate": float(metrics["success_rate"]),
+            "collision_rate": float(metrics["collision_rate"]),
+            "energy": float(metrics["energy"]),
+        }
+
     names = list(rows)
     fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.2))
+
     for ax, (key, title, scale, unit) in zip(
-            axes, [("success_rate", "Success rate", 100, "%"),
-                   ("collision_rate", "Collision rate", 100, "%"),
-                   ("energy", "Energy [a.u.]", 1, "")]):
+        axes,
+        [
+            ("success_rate", "Success rate", 100, "%"),
+            ("collision_rate", "Collision rate", 100, "%"),
+            ("energy", "Energy [a.u.]", 1, ""),
+        ],
+    ):
         vals = [rows[n][key] * scale for n in names]
-        bars = ax.bar(names, vals, color=["#9aa0a6", "#4caf7d", "#7aa6c2"])
+        bars = ax.bar(
+            names, vals, color=["#4caf7d", "#7aa6c2"]
+        )
+
         ax.tick_params(axis="x", labelsize=7)
-        for b_, v in zip(bars, vals):
-            ax.text(b_.get_x() + b_.get_width() / 2, v, f"{v:.1f}{unit}",
-                    ha="center", va="bottom", fontsize=9)
+
+        for bar, value in zip(bars, vals):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                value,
+                f"{value:.1f}{unit}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
+
         ax.set_title(title, fontsize=9)
         ax.margins(y=0.2)
-    fig.suptitle("Test 5 — Stress environment (12 fast, noisy obstacles): "
-                 "deterministic vs risk-aware imagination", y=1.04)
+
+    fig.suptitle(
+        "Test 5 — Stress environment (12 fast, noisy obstacles): "
+        "ensemble mean vs risk-aware imagination",
+        y=1.04,
+    )
     fig.tight_layout()
-    fig.savefig(ASSETS / "risk_aware_stress.png", bbox_inches="tight")
+    fig.savefig(
+        ASSETS / "risk_aware_stress.png",
+        bbox_inches="tight",
+    )
     plt.close(fig)
 
     # ---- merge results --------------------------------------------------

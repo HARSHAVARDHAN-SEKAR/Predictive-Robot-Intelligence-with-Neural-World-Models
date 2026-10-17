@@ -233,5 +233,22 @@
         0.5517696889957435
       ]
     }
+  },
+  "test4_uncertainty": {
+    "disagreement_error_correlation": 0.492007246169404,
+    "n_members": 5,
+    "env": "stress"
+  },
+  "test5_risk_aware_stress": {
+    "Ensemble mean\n(5 futures)": {
+      "success_rate": 0.68,
+      "collision_rate": 0.24,
+      "energy": 17.19514114703912
+    },
+    "Ensemble CVaR\n(risk-aware)": {
+      "success_rate": 0.76,
+      "collision_rate": 0.12,
+      "energy": 18.838907982955387
+    }
   }
 }

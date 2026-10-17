@@ -1,5 +1,5 @@
 # Neural World Model & Predictive Robot Intelligence
-.PHONY: install test bench upgrade demo report docker clean
+.PHONY: install test bench base-model upgrade demo docker clean occupancy
 
 install:
 	pip install -r requirements.txt
@@ -10,7 +10,10 @@ test:            ## fast CI smoke test (<60 s)
 bench:           ## full research pipeline: data -> train -> Tests 1-3 -> figures
 	python3 scripts/run_pipeline.py
 
-upgrade:         ## ensemble uncertainty study: Tests 4-5
+base-model:      ## create the base model only when missing
+	python3 scripts/train_base_model.py
+
+upgrade: base-model   ## ensemble uncertainty study: Tests 4-5
 	python3 scripts/run_upgrade.py 1 && python3 scripts/run_upgrade.py 2 && python3 scripts/run_upgrade.py 3
 
 demo:            ## regenerate the animated demo GIF
