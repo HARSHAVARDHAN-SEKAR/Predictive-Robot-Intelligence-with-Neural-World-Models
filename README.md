@@ -167,7 +167,7 @@ pip install -r requirements.txt        # or: make install
 ```bash
 make test        # fast smoke test (<60 s): env, models, all 5 planners
 make bench       # full pipeline: data → train → Tests 1–3 → all figures (~5 min, CPU)
-make upgrade     # Tests 4–5 (requires datasets/world_model.pkl from make bench)
+make upgrade     # Tests 4–5; trains missing base model automatically
 make demo        # regenerate the animated demo GIF
 make occupancy   # Stage 1: occupancy-grid prediction + planning (Test 6)
 make docker      # build image and run container smoke tests
