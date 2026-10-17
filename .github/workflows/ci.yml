@@ -30,7 +30,9 @@ jobs:
         run: python -m pip check
 
       - name: Run smoke tests
-        run: python tests/smoke_test.py
+        run: |
+          python tests/smoke_test.py
+          python tests/test_upgrade_regression.py
 
   docker:
     name: Docker smoke tests
@@ -47,4 +49,6 @@ jobs:
         run: docker run --rm nwm:ci python -m pip check
 
       - name: Run container smoke tests
-        run: docker run --rm nwm:ci python tests/smoke_test.py
+        run: |
+          docker run --rm nwm:ci python tests/smoke_test.py
+          docker run --rm nwm:ci python tests/test_upgrade_regression.py
