@@ -38,7 +38,12 @@ def test_all():
     rm = RobotDynamicsModel(seed=0)
     assert rm.fit(S, A, SN) < 1e-2, "robot dynamics failed to fit"
 
-    X, Y = ObstacleMotionModel.make_dataset(np.concatenate(tracks, axis=0))
+    episode_data = [
+        ObstacleMotionModel.make_dataset(track)
+        for track in tracks
+    ]
+    X = np.concatenate([pair[0] for pair in episode_data], axis=0)
+    Y = np.concatenate([pair[1] for pair in episode_data], axis=0)
     om = ObstacleMotionModel(seed=0); om.fit(X, Y)
     ens = EnsembleObstacleModel(n_members=2, seed=0); ens.fit(X, Y)
 
@@ -76,7 +81,12 @@ def test_occupancy():
     (S, A, SN), tracks = collect()
     rm = RobotDynamicsModel(seed=0)
     rm.fit(S, A, SN)
-    X, Y = ObstacleMotionModel.make_dataset(np.concatenate(tracks, axis=0))
+    episode_data = [
+        ObstacleMotionModel.make_dataset(track)
+        for track in tracks
+    ]
+    X = np.concatenate([pair[0] for pair in episode_data], axis=0)
+    Y = np.concatenate([pair[1] for pair in episode_data], axis=0)
     ens = EnsembleObstacleModel(n_members=2, seed=0)
     ens.fit(X, Y)
 
