@@ -1,0 +1,6 @@
+# Versions used for the verified CPU simulation on Python 3.10.12.
+# Keep ROS 2 and optional PyTorch packages outside this environment.
+numpy==2.2.6
+scipy==1.15.3
+scikit-learn==1.7.2
+matplotlib==3.10.9

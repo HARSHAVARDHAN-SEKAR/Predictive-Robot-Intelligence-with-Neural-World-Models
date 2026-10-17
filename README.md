@@ -159,7 +159,7 @@ All figures: `assets/` · Raw metrics: `results/benchmark_results.json`
 git clone https://github.com/HARSHAVARDHAN-SEKAR/Predictive-Robot-Intelligence-with-Neural-World-Models.git
 cd Predictive-Robot-Intelligence-with-Neural-World-Models
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt        # or: make install
+pip install -r requirements.txt -c constraints-cpu.txt
 ```
 
 ## Run
