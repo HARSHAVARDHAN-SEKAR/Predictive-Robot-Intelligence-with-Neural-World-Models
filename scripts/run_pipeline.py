@@ -293,8 +293,20 @@ def main():
                "test2_planning": {"in_distribution": plan_in,
                                   "out_of_distribution": plan_ood},
                "runtime_s": round(time.time() - t0, 1)}
-    with open(RESULTS / "benchmark_results.json", "w") as f:
-        json.dump(results, f, indent=2)
+
+    output_path = RESULTS / "benchmark_results.json"
+
+    if output_path.exists():
+        with output_path.open("r") as f:
+            previous_results = json.load(f)
+    else:
+        previous_results = {}
+
+    previous_results.update(results)
+
+    with output_path.open("w") as f:
+        json.dump(previous_results, f, indent=2)
+
     print(f"\n[done] total {results['runtime_s']}s — figures in assets/, "
           f"metrics in results/benchmark_results.json")
 
