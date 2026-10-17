@@ -1,20 +1,50 @@
 name: CI
+
 on: [push, pull_request]
+
 jobs:
   smoke:
+    name: Python ${{ matrix.python-version }} smoke tests
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: "3.12"}
-      - run: pip install -r requirements.txt
-      - name: Smoke tests (env, models, all 5 planners)
-        run: python tests/smoke_test.py
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Docker build + smoke test inside container
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
         run: |
-          docker build -t nwm .
-          docker run --rm nwm python tests/smoke_test.py
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -c constraints-cpu.txt
+
+      - name: Check dependencies
+        run: python -m pip check
+
+      - name: Run smoke tests
+        run: python tests/smoke_test.py
+
+  docker:
+    name: Docker smoke tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t nwm:ci .
+
+      - name: Check container dependencies
+        run: docker run --rm nwm:ci python -m pip check
+
+      - name: Run container smoke tests
+        run: docker run --rm nwm:ci python tests/smoke_test.py
