@@ -266,14 +266,29 @@ class RiskAwareNeuralMPC(NeuralMPCPlanner):
     futures the model is uncertain about.
 
         cost(rollout) = CVaR_q over m of cost(rollout | future_m)
+
+    Optional recheck_composed_plan rerolls the weighted sequence and falls
+    back to the lowest-CVaR sample clearing every supplied future, if any.
+    This checks predicted steps only and does not guarantee robot safety.
     """
 
     name = "Risk-MPC"
 
     def __init__(self, robot_model, ensemble_model, risk_q: float = 0.4,
-                 **kw):
+                 recheck_composed_plan: bool = False, **kw):
         super().__init__(robot_model, ensemble_model, **kw)
         self.risk_q = risk_q
+        self.recheck_composed_plan = recheck_composed_plan
+
+    @staticmethod
+    def _collision_free_in_all_futures(traj, futures):
+        """Per-plan clearance at predicted steps, not continuous-time safety."""
+        clear = np.isfinite(traj).all(axis=(0, 2))
+        for future in futures:
+            distances = np.linalg.norm(
+                traj[:, :, None, :2] - future[:, None, :, :], axis=-1)
+            clear &= (np.isfinite(distances) & (distances >= SAFE)).all(axis=(0, 2))
+        return clear
 
     def _predict_obstacles_all(self, obs):
         """(M, H, K, 2) imagined futures; CV fallback until history fills."""
@@ -298,6 +313,16 @@ class RiskAwareNeuralMPC(NeuralMPCPlanner):
         w = np.exp(-(cvar - cvar.min()) / self.lam)
         w /= w.sum()
         self.mean = np.tensordot(w, acts, axes=1)
+        if self.recheck_composed_plan:
+            composed_traj = self._rollout(obs["robot"], self.mean[None])
+            if not self._collision_free_in_all_futures(composed_traj, futures)[0]:
+                clear = self._collision_free_in_all_futures(traj, futures)
+                eligible = np.flatnonzero(clear & np.isfinite(cvar))
+                if eligible.size:
+                    best = eligible[np.argmin(cvar[eligible])]
+                    self.mean = acts[best].copy()
+                # If no sample clears every supplied future, retain the
+                # baseline plan. This is a fallback, not a safety guarantee.
         a = self.mean[0].copy()
         self.mean = np.roll(self.mean, -1, axis=0)
         self.mean[-1] = self.mean[-2]

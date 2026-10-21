@@ -33,6 +33,7 @@ jobs:
         run: |
           python tests/smoke_test.py
           python tests/test_upgrade_regression.py
+          python tests/test_composed_plan.py
 
   docker:
     name: Docker smoke tests
@@ -52,3 +53,4 @@ jobs:
         run: |
           docker run --rm nwm:ci python tests/smoke_test.py
           docker run --rm nwm:ci python tests/test_upgrade_regression.py
+          docker run --rm nwm:ci python tests/test_composed_plan.py
